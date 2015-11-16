@@ -1,0 +1,24 @@
+{
+    "name": "itf/vich-imagine-bundle",
+    "description": "Easy integration of VichUploaderBundle (upload) and LiipImagineBundle (processor)",
+    "type": "library",
+    "require": {
+        "php": ">=5.3",
+        "symfony/symfony": "^2.7",
+        "vich/uploader-bundle": "^0.14.0",
+        "liip/imagine-bundle": "^1.3"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dennis Senn",
+            "email": "info@interface-f.com"
+        }
+    ],
+    "target-dir": "VichImagineBundle",
+    "autoload": {
+        "psr-0": {
+            "VichImagineBundle": ""
+        }
+    }
+}
