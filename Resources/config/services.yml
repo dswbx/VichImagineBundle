@@ -1,0 +1,9 @@
+services:
+    vich.custom.random_namer:
+        class: VichImagineBundle\Upload\Naming\RandomNamer
+
+    vich.listener.upload:
+        class: VichImagineBundle\EventListener\VichUploadListener
+        arguments: ["@service_container"]
+        tags:
+            - { name: kernel.event_listener, event: vich_uploader.post_upload, method: onPostUpload }

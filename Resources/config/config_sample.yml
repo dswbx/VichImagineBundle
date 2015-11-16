@@ -1,0 +1,42 @@
+twig:
+    form_themes:
+        # other form themes
+        - 'VichUploaderBundle:Form:fields.html.twig'
+
+vich_uploader:
+    db_driver: orm # or mongodb or propel or phpcr
+    mappings:
+        product_image:
+            uri_prefix:         /images/products
+            upload_destination: %kernel.root_dir%/../web/images/products
+            namer: vich.custom.random_namer
+
+            inject_on_load:     false
+            delete_on_update:   true
+            delete_on_remove:   true
+
+
+liip_imagine:
+    resolvers:
+        default:
+            web_path:
+                web_root: %kernel.root_dir%/../web
+                cache_prefix: cache/
+    loaders:
+        default:
+            filesystem:
+                data_root: %kernel.root_dir%/../web/
+    driver:               gd
+    cache:                default
+    data_loader:          default
+    default_image:        null
+    controller:
+        filter_action:         liip_imagine.controller:filterAction
+        filter_runtime_action: liip_imagine.controller:filterRuntimeAction
+    filter_sets:
+        product_image:
+            filters:
+                jpeg_quality: 75
+                #png_compression_level:  ~
+                format: jpg
+                relative_resize: { widen: 800 }
