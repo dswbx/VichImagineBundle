@@ -7,3 +7,13 @@ services:
         arguments: ["@service_container"]
         tags:
             - { name: kernel.event_listener, event: vich_uploader.post_upload, method: onPostUpload }
+
+    vichimagine.uploader:
+        class: VichImagineBundle\Upload\Upload
+        arguments: ["@service_container"]
+
+    vichimagine.file:
+        class: VichImagineBundle\Upload\File
+        arguments: ["@service_container"]
+
+    # field
