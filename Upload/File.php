@@ -1,16 +1,19 @@
 <?php
 namespace VichImagineBundle\Upload;
 
-use AppBundle\Library\PN\AbstractServiceSetter;
+use ITF\AdminBundle\Admin\Service\AbstractServiceSetter;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
 
 class File extends AbstractServiceSetter
 {
+	private $mapping;
+	
 	public function __construct(ContainerInterface $container)
 	{
-		$this->setContainer($container);
+		parent::__construct($container);
+		
 		$this->mapping = $this->getContainer()->get('vich_uploader.property_mapping_factory');
 	}
 
@@ -18,7 +21,7 @@ class File extends AbstractServiceSetter
 	 * @param $entity
 	 * @param $mapping_name
 	 *
-	 * @return \Vich\UploaderBundle\Mapping\PropertyMapping
+	 * @return PropertyMapping
 	 */
 	protected function getMapping($entity, $mapping_name)
 	{
