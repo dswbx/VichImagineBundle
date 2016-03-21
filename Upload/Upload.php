@@ -13,7 +13,8 @@ class Upload extends AbstractServiceSetter
 
 	public function __construct(ContainerInterface $container)
 	{
-		$this->setContainer($container);
+		parent::__construct($container);
+
 		$this->liip_data_manager = $container->get('liip_imagine.data.manager');
 		$this->liip_filter_manager = $container->get('liip_imagine.filter.manager');
 	}
@@ -73,6 +74,11 @@ class Upload extends AbstractServiceSetter
 		$mapping_config = $this->vichGetMappingConfig($propertyMapping->getMappingName());
 		if ($mapping_config) {
 			$namer = $mapping_config['namer'];
+
+			// illegal offset warning (backwards compatibility)
+			if (is_array($namer) && isset($namer['service'])) {
+				$namer = $namer['service'];
+			}
 
 			if ($this->getContainer()->has($namer)) {
 				$namer = $this->getContainer()->get($namer);
