@@ -1,7 +1,7 @@
 <?php
 namespace VichImagineBundle\Upload;
 
-use AppBundle\Library\PN\AbstractServiceSetter;
+use ITF\AdminBundle\Admin\Service\AbstractServiceSetter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
