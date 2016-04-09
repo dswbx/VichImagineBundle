@@ -1,6 +1,13 @@
 services:
     vich.custom.random_namer:
         class: VichImagineBundle\Upload\Naming\RandomNamer
+        calls:
+            - [ setContainer, [ '@service_container' ] ]
+
+    vich.custom.directory_namer:
+        class: VichImagineBundle\Upload\Naming\DirectoryNamer
+        calls:
+            - [ setContainer, [ '@service_container' ] ]
 
     vich.listener.upload:
         class: VichImagineBundle\EventListener\VichUploadListener

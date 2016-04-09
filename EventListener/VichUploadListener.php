@@ -1,6 +1,9 @@
 <?php
 namespace VichImagineBundle\EventListener;
 
+use Gaufrette\Adapter\Local;
+use Gaufrette\Filesystem;
+use Knp\Bundle\GaufretteBundle\DependencyInjection\Factory\LocalAdapterFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
@@ -45,6 +48,17 @@ class VichUploadListener extends Event
 	 */
 	private function getRelativeDir()
 	{
+		switch($this->getConfig()['storage']) {
+			case 'gaufrette':
+				$namer = $this->getMapping()->getNamer();
+
+				if (method_exists($namer, 'getDirectory')) {
+					return $namer->getDirectory();
+				}
+
+				break;
+		}
+
 		return $this->getMapping()->getUriPrefix();
 	}
 
@@ -106,15 +120,35 @@ class VichUploadListener extends Event
 		$this->getMapping()->setFileName($this->getObject(), $file_name);
 	}
 
+	/**
+	 * @return Filesystem
+	 */
+	private function getFilesystem()
+	{
+		switch($this->getConfig()['storage']) {
+			case 'gaufrette':
+				return $this->getContainer()->get('knp_gaufrette.filesystem_map')->get($this->getMapping()->getUploadDestination());				
+				break;
+			
+			case 'file_system':
+			default:
+				$adapter = new Local($this->getContainer()->getParameter('kernel.root_dir').'/../web');
+				return new Filesystem($adapter);
+				break;
+		}
+	}
 
 	/**
 	 * @param \Vich\UploaderBundle\Event\Event $event
 	 */
 	public function onPostUpload(\Vich\UploaderBundle\Event\Event $event)
 	{
+
 		// set event data
 		$this->mapping = $event->getMapping();
 		$this->object = $event->getObject();
+
+		$filesystem = $this->getFilesystem();
 
 		// if image/*
 		if (preg_match('/^image\//', $this->getFile()->getMimeType())) {
@@ -124,7 +158,6 @@ class VichUploadListener extends Event
 			// file and paths
 			$file_name = $this->getFileName();
 			$file_relative = $this->getRelativeDir() . '/' . $file_name;
-			$file_absolute = $this->getAbsoluteDir() . '/' . $file_name;
 
 			// resize
 			$image = $this->liip_data_manager->find($filter, $file_relative);
@@ -132,15 +165,18 @@ class VichUploadListener extends Event
 			$format = $response->getFormat();
 
 			// replace extension & update
-			$file_absolute = $this->replaceExtension($file_absolute, $format);
 			$file_name = $this->replaceExtension($file_name, $format);
 			$this->updateFileName($file_name);
 
 			// write
-			$handle = fopen($file_absolute, 'w');
-			fwrite($handle, $response->getContent());
-			fclose($handle);
+			$filesystem->write($file_relative, $response->getContent(), true);
 		}
+	}
+
+	
+	private function getConfig()
+	{
+		return $this->getContainer()->getParameter('vich_imagine');
 	}
 
 
