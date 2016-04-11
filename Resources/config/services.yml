@@ -15,6 +15,11 @@ services:
         tags:
             - { name: kernel.event_listener, event: vich_uploader.post_upload, method: onPostUpload }
 
+    vichimagine.provider:
+        class: VichImagineBundle\Upload\Provider
+        calls:
+            - [ setContainer, [ '@service_container' ] ]
+
     vichimagine.uploader:
         class: VichImagineBundle\Upload\Upload
         arguments: ["@service_container"]

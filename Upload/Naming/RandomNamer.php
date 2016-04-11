@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
 use Vich\UploaderBundle\Naming\ConfigurableInterface;
 use Vich\UploaderBundle\Naming\NamerInterface;
+use VichImagineBundle\Upload\AbstractServiceSetter;
 
 /**
  * Class RandomNamer
@@ -13,7 +14,7 @@ use Vich\UploaderBundle\Naming\NamerInterface;
  *
  * @author Dennis Senn <info@interface-f.com>
  */
-class RandomNamer extends AbstractNamer implements NamerInterface, ConfigurableInterface
+class RandomNamer extends AbstractServiceSetter implements NamerInterface, ConfigurableInterface
 {
 	private $options;
 
@@ -41,8 +42,14 @@ class RandomNamer extends AbstractNamer implements NamerInterface, ConfigurableI
 		return $this->getRandomFileName($file_name);
 	}
 
-	public function getRandomFileName($file_name)
+	public function getRandomFileName($file_name, PropertyMapping $mapping = null)
 	{
+		if ($mapping !== null) $this->mapping = $mapping;
+
+		if (!$this->getMapping() instanceof PropertyMapping) {
+			throw new \LogicException(sprintf("property mapping must be set to get random file name"));
+		}
+
 		// get extension
 		$extension = substr($file_name, strrpos($file_name, '.') + 1);
 

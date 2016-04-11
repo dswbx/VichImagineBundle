@@ -1,9 +1,11 @@
 <?php
 namespace VichImagineBundle\Upload\Naming;
+
 use Vich\UploaderBundle\Mapping\PropertyMapping;
 use Vich\UploaderBundle\Naming\DirectoryNamerInterface;
+use VichImagineBundle\Upload\AbstractServiceSetter;
 
-class DirectoryNamer extends AbstractNamer implements DirectoryNamerInterface
+class DirectoryNamer extends AbstractServiceSetter implements DirectoryNamerInterface
 {
     /**
      * Creates a directory name for the file being uploaded.

@@ -1,7 +1,6 @@
 <?php
 namespace VichImagineBundle\Upload;
 
-use ITF\AdminBundle\Admin\Service\AbstractServiceSetter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
@@ -13,10 +12,23 @@ class Upload extends AbstractServiceSetter
 
 	public function __construct(ContainerInterface $container)
 	{
-		parent::__construct($container);
+		parent::setContainer($container);
 
 		$this->liip_data_manager = $container->get('liip_imagine.data.manager');
 		$this->liip_filter_manager = $container->get('liip_imagine.filter.manager');
+	}
+
+	/**
+	 * @param PropertyMapping $mapping
+	 *
+	 * @return Provider
+	 */
+	private function getProvider(PropertyMapping $mapping)
+	{
+		$provider = $this->getContainer()->get('vichimagine.provider');
+		$provider->setMapping($mapping);
+
+		return $provider;
 	}
 
 	/**
@@ -45,10 +57,12 @@ class Upload extends AbstractServiceSetter
 
 	public function delete($filename, PropertyMapping $propertyMapping)
 	{
-		$file_absolute = $propertyMapping->getUploadDestination() . '/' . $filename;
+		$provider = $this->getProvider($propertyMapping);
+		$filesystem = $provider->getFilesystem();
+		$file = $provider->getRelativeDir() . '/' . $filename;
 
-		if (is_file($file_absolute)) {
-			return unlink($file_absolute);
+		if ($filesystem->read($file)) {
+			$filesystem->delete($file);
 		}
 
 		return true;
@@ -66,8 +80,10 @@ class Upload extends AbstractServiceSetter
 		}
 
 		// vars
-		$upload_dir = $propertyMapping->getUploadDestination();
-		$relative_dir = $propertyMapping->getUriPrefix();
+		$provider = $this->getProvider($propertyMapping);
+
+		$filesystem = $provider->getFilesystem();
+		$relative_dir = $provider->getRelativeDir(); //$propertyMapping->getUriPrefix();
 		$file_name = $file->getClientOriginalName();
 
 		// if namer set
@@ -83,16 +99,18 @@ class Upload extends AbstractServiceSetter
 			if ($this->getContainer()->has($namer)) {
 				$namer = $this->getContainer()->get($namer);
 				if (method_exists($namer, 'getRandomFileName')) {
-					$file_name = $namer->getRandomFileName($file_name, $propertyMapping->getUploadDestination());
+					$file_name = $namer->getRandomFileName($file_name, $propertyMapping);
 				}
 			}
 		}
 
 		// upload
-		$uploaded = $file->move($upload_dir, $file_name);
+		$uploaded = $filesystem->write($relative_dir . '/' . $file_name, file_get_contents($file->getPathname()));
+		//$uploaded = $file->move($upload_dir, $file_name);
+
 		if ($uploaded) {
 			// apply filter
-			return $this->applyFilter($relative_dir, $file_name, $filter_name);
+			return $this->doApplyFilter($file_name, $propertyMapping);
 		}
 
 		return false;
@@ -113,23 +131,25 @@ class Upload extends AbstractServiceSetter
 			$imageRaw = file_get_contents($url);
 		}
 
-
 		// get old filename
 		if (!preg_match('/([0-9a-zA-Z\_\-]*?\.jpe?g|png|gif)/', $url, $m)) {
 			throw new \Exception("cannot extract filename from url: ".$url);
 		}
 
+		// init
+		$provider = $this->getProvider($propertyMapping);
+		$filesystem = $provider->getFilesystem();
+		$relative_dir = $provider->getRelativeDir();
+
 		$oldFileName = $m[0];
-		$newFileName = '1452203621_BlL1EnvM04RTbSQW76e8.jpg'; //$this->getContainer()->get('vich.custom.random_namer')->getRandomFileName($oldFileName);
-		$fileLocationAbsolute = $this->getWebDirectory() . $propertyMapping->getUriPrefix() . '/' . $newFileName;
+		$newFileName = $this->getContainer()->get('vich.custom.random_namer')->getRandomFileName($oldFileName, $propertyMapping);
+		$fileLocationAbsolute = $relative_dir . '/' . $newFileName;
 
 		// save file in upload_destination
-		$handle = fopen($fileLocationAbsolute, 'w');
-		fwrite($handle, $imageRaw);
-		fclose($handle);
+		$filesystem->write($fileLocationAbsolute, $imageRaw, true);
 
 		// apply filter
-		if ($this->applyFilter($propertyMapping->getUriPrefix(), $newFileName, $propertyMapping->getMappingName())) {
+		if ($this->doApplyFilter($newFileName, $propertyMapping)) {
 			// set file name to entity
 			if ($set_file) {
 				$this->getContainer()->get('property_accessor')->setValue($entity, $propertyMapping->getFileNamePropertyName(), $newFileName);
@@ -154,6 +174,7 @@ class Upload extends AbstractServiceSetter
 	 * @param string $filter               imagine filter name
 	 *
 	 * @return string
+	 * @deprecated
 	 */
 	public function applyFilter($relative_path, $file_name, $filter)
 	{
@@ -175,6 +196,33 @@ class Upload extends AbstractServiceSetter
 		$handle = fopen($file_absolute, 'w');
 		fwrite($handle, $response->getContent());
 		fclose($handle);
+
+		return $file_name;
+	}
+
+	public function doApplyFilter($file_name, PropertyMapping $mapping)
+	{
+		// init
+		$provider = $this->getProvider($mapping);
+		$filesystem = $provider->getFilesystem();
+		$file_relative = $provider->getRelativeDir() . '/' . $file_name;
+		$filter = $mapping->getMappingName();
+
+		// resize
+		$image = $this->liip_data_manager->find($filter, $file_relative);
+		$response = $this->liip_filter_manager->applyFilter($image, $filter);
+		$format = $response->getFormat();
+
+		// replace extension & update
+		$file_name = $this->replaceExtension($file_name, $format);
+
+		// remove if exists
+		if ($filesystem->read($file_relative)) {
+			$filesystem->delete($file_relative);
+		}
+
+		// write
+		$filesystem->write($file_relative, $response->getContent());
 
 		return $file_name;
 	}

@@ -1,9 +1,10 @@
 <?php
-namespace VichImagineBundle\Upload\Naming;
+namespace VichImagineBundle\Upload;
 
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-abstract class AbstractNamer
+abstract class AbstractServiceSetter
 {
     /** @var ContainerInterface $container */
     private $container;
@@ -16,6 +17,14 @@ abstract class AbstractNamer
     protected function getContainer()
     {
         return $this->container;
+    }
+
+    /**
+     * @return EntityManager
+     */
+    protected function getEntityManager()
+    {
+        return $this->container->get('doctrine.orm.entity_manager');
     }
 
     protected function getConfig()
