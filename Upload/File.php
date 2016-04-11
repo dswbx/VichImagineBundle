@@ -1,6 +1,7 @@
 <?php
 namespace VichImagineBundle\Upload;
 
+use Gaufrette\Exception\FileNotFound;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
@@ -36,14 +37,9 @@ class File extends AbstractServiceSetter
 	public function asset($entity, $mapping_name, $default = false)
 	{
 		$mapping = $this->getMapping($entity, $mapping_name);
+		$file = $this->getContainer()->get('vich_uploader.templating.helper.uploader_helper')->asset($entity, $mapping->getFilePropertyName());
 
-		$file = $mapping->getUriPrefix() . '/' . $mapping->getFileName($entity);
-
-		if (!is_file($this->getContainer()->getParameter('kernel.root_dir').'/../web' . $file)) {
-			return $default;
-		}
-
-		return $file;
+		return $file ? $file : $default;
 	}
 
 	public function fileName($entity, $mapping_name)
