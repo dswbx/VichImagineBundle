@@ -1,10 +1,13 @@
 <?php
 namespace VichImagineBundle\Upload;
 
+use Gaufrette\Adapter\MetadataSupporter;
 use Gaufrette\Exception\FileNotFound;
+use Gaufrette\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
+use VichImagineBundle\Upload\Gaufrette\MetadataFilesystemWriteAdapter;
 
 class Upload extends AbstractServiceSetter
 {
@@ -224,7 +227,13 @@ class Upload extends AbstractServiceSetter
 		if ($filesystem->read($file_relative)) {
 			$filesystem->delete($file_relative);
 		}
-
+		
+		// if metadata supported, replace filesystem and set metadata
+		if ($filesystem->getAdapter() instanceof MetadataSupporter) {
+			$filesystem = new MetadataFilesystemWriteAdapter($filesystem);
+			$filesystem->setMetadataByFormat($format);
+		}
+		
 		// write
 		$filesystem->write($provider->getRelativeDir() . '/' . $file_name, $response->getContent());
 
