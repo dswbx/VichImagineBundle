@@ -1,6 +1,7 @@
 <?php
 namespace VichImagineBundle\Upload;
 
+use Gaufrette\Exception\FileNotFound;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
@@ -61,9 +62,12 @@ class Upload extends AbstractServiceSetter
 		$filesystem = $provider->getFilesystem();
 		$file = $provider->getRelativeDir() . '/' . $filename;
 
-		if ($filesystem->read($file)) {
-			$filesystem->delete($file);
-		}
+		// ignore FileNotFound Exception, but \RuntimeException
+		try {
+			if ($filesystem->read($file)) {
+				$filesystem->delete($file);
+			}
+		} catch (FileNotFound $e) {}
 
 		return true;
 	}
@@ -222,7 +226,7 @@ class Upload extends AbstractServiceSetter
 		}
 
 		// write
-		$filesystem->write($file_relative, $response->getContent());
+		$filesystem->write($provider->getRelativeDir() . '/' . $file_name, $response->getContent());
 
 		return $file_name;
 	}
