@@ -27,7 +27,7 @@ class Upload extends AbstractServiceSetter
 	 *
 	 * @return Provider
 	 */
-	private function getProvider(PropertyMapping $mapping)
+	public function getProvider(PropertyMapping $mapping)
 	{
 		$provider = $this->getContainer()->get('vichimagine.provider');
 		$provider->setMapping($mapping);
