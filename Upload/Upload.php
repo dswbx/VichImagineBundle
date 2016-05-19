@@ -138,6 +138,12 @@ class Upload extends AbstractServiceSetter
 			$imageRaw = file_get_contents($url);
 		}
 
+		// guess mime type
+		$guessedMimeType = $this->getContainer()->get('liip_imagine.binary.mime_type_guesser')->guess($imageRaw);
+		if (!preg_match('/^image/', $guessedMimeType)) {
+			throw new \Exception(sprintf("unsupported mime type %s", $guessedMimeType));
+		}
+
 		// get old filename
 		if (!preg_match('/([0-9a-zA-Z\_\-]*?\.jpe?g|png|gif)/', $url, $m)) {
 			throw new \Exception("cannot extract filename from url: ".$url);
