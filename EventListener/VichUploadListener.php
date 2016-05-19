@@ -145,6 +145,8 @@ class VichUploadListener extends Event
 
 			// replace extension & update
 			$file_name = $this->replaceExtension($file_name, $format);
+			$file_relative = $this->replaceExtension($file_relative, $format);
+
 			$this->updateFileName($file_name);
 
 			// write
