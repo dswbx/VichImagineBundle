@@ -122,6 +122,28 @@ class Upload extends AbstractServiceSetter
 
 		return false;
 	}
+	
+	public function crawlFile($url, $mimeType = 'image')
+	{
+		// get image
+		if (function_exists('curl_init')){
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$imageRaw = curl_exec($ch);
+			curl_close($ch);
+		} else {
+			$imageRaw = file_get_contents($url);
+		}
+		
+		// guess mime type
+		$guessedMimeType = $this->getContainer()->get('liip_imagine.binary.mime_type_guesser')->guess($imageRaw);
+		if (!preg_match('/^'.$mimeType.'/', $guessedMimeType)) {
+			throw new \Exception(sprintf("unsupported mime type %s from url %s", $guessedMimeType, $url));
+		}
+		
+		return $imageRaw;
+	}
 
 	public function uploadByUrl($url, $entity, $file_property_name, $set_file = false)
 	{
