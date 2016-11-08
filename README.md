@@ -5,7 +5,7 @@ This bundle integrates VichUploaderBundle as uploader and LiipImagineBundle as p
 composer require itf/vich-imagine-bundle "dev-master"
 php app/console assets:install
 ```
-Active the bundles in AppKernel.php:
+Activate the bundles in AppKernel.php:
 ```php
 public function registerBundles() {
     $bundles = array(
