@@ -168,7 +168,19 @@ class Upload extends AbstractServiceSetter
 
 		// get old filename
 		if (!preg_match('/([0-9a-zA-Z\_\-]*?\.jpe?g|png|gif)/', $url, $m)) {
-			throw new \Exception("cannot extract filename from url: ".$url);
+            if (empty($imageRaw)) {
+                throw new \Exception("cannot extract filename from url: ".$url);
+            }
+
+            /** if image has been loaded but there is no file extension in url we can try to generate one */
+            $guessedMimeTypeParts = explode('/', $guessedMimeType);
+            $imageExtension = $guessedMimeTypeParts[1];
+            $randomImageName = time() . '_'. random_bytes(5);
+
+            $imageFullName = $randomImageName . '.' .$imageExtension;
+
+            /** @bc will not break result from preg_match below */
+            $m = [0 => $imageFullName];
 		}
 
 		// init
