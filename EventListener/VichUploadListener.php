@@ -5,6 +5,7 @@ namespace VichImagineBundle\EventListener;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Vich\UploaderBundle\Mapping\PropertyMapping;
+use VichImagineBundle\Entity\Interfaces\CustomLiipFilterInterface;
 use VichImagineBundle\Event\UploadEvent;
 
 /**
@@ -89,6 +90,10 @@ class VichUploadListener extends Event
      */
     private function getFilterName()
     {
+        if ($this->object instanceof CustomLiipFilterInterface) {
+            return $this->object->getFilterName();
+        }
+        
         return $this->getMapping()->getMappingName();
     }
     
