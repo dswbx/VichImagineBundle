@@ -15,7 +15,7 @@ class DirectoryNamer extends AbstractServiceSetter implements DirectoryNamerInte
      *
      * @return string The directory name.
      */
-    public function directoryName($entity, PropertyMapping $mapping)
+    public function directoryName($entity, PropertyMapping $mapping): string
     {
         $namer = $mapping->getNamer();
 
